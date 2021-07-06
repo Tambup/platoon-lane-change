@@ -29,5 +29,6 @@ packet ManeuverMessage;
 // Is sent from a leader of platoon to all.
 packet StartSignal extends ManeuverMessage {
     // if members reach warnchangelane request
-    int usedLanes[];
+    int destinationLane;
+    double laneChangeDutration;
 }

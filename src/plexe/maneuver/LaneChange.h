@@ -5,6 +5,11 @@
 
 #include "plexe/maneuver/Maneuver.h"
 
+#include "plexe/messages/WarnChangeLane_m.h"
+#include "plexe/messages/WarnChangeLaneAck_m.h"
+#include "plexe/messages/StartSignal_m.h"
+#include "plexe/messages/LaneChanged_m.h"
+#include "plexe/messages/LaneChangeClose_m.h"
 
 using namespace veins;
 
@@ -28,6 +33,40 @@ public:
      */
     virtual void startManeuver(const void* parameters) override;
 
+    /**
+     * Handles a WarnChangeLane in the context of this application
+     *
+     * @param WarnChangeLane msg to handle
+     */
+    void handleWarnChangeLane(const WarnChangeLane* mm);
+
+    /**
+     * Handles a handleWarnChangeLaneAck in the context of this application
+     *
+     * @param WarnChangeLaneAck msg to handle
+     */
+    void handleWarnChangeLaneAck(const WarnChangeLaneAck* mm);
+
+    /**
+     * Handles a StartSignal in the context of this application
+     *
+     * @param StartSignal msg to handle
+     */
+    void handleStartSignal(const StartSignal* msg);
+
+    /**
+     * Handles a LaneChanged in the context of this application
+     *
+     * @param LaneChanged msg to handle
+     */
+    void handleLaneChanged(const LaneChanged* msg);
+
+    /**
+     * Handles a LaneChangeClose in the context of this application
+     *
+     * @param LaneChangeClose msg to handle
+     */
+    void handleLaneChangeClose(const LaneChangeClose* msg);
 
     virtual void abortManeuver() override;
     virtual void onFailedTransmissionAttempt(const ManeuverMessage* mm) override;
@@ -53,8 +92,26 @@ protected:
     /** initializes a laneChange maneuver, setting up required data */
     bool initializeLaneChangeManeuver();
 
+    /** initializes the handling of a WarnChangeLane */
+    bool processWarnChangeLane(const WarnChangeLane* msg);
+
+    /** initializes the handling of a WarnChangeLane */
+    bool processWarnChangeLaneAck(const WarnChangeLaneAck* msg);
+
+    /** initializes the handling of a StartSignal */
+    bool processStartSignal(const StartSignal* msg);
+
+    /** initializes the handling of a LaneChanged message */
+    bool prcessleLaneChanged(const LaneChanged* msg);
+
+    /** initializes the handling of a LaneChangeClose message */
+    bool processLaneChangeClose(const LaneChangeClose* msg);
+
 private:
     void sendLaneChangeRequest(int leaderId, std::string externalId, int platoonId);
+    void resetReceivedAck();
+
+    std::map<int, bool> receivedAck;
 };
 
 } // namespace plexe

@@ -36,11 +36,6 @@ void LaneChangePlatooningApp::initialize(int stage)
     GeneralPlatooningApp::initialize(stage);
 
     if (stage == 1) {
-        // connect maneuver application to protocol
-        protocol->registerApplication(MANEUVER_TYPE, gate("lowerLayerIn"), gate("lowerLayerOut"), gate("lowerControlIn"), gate("lowerControlOut"));
-        // register to the signal indicating failed unicast transmissions
-        findHost()->subscribe(Mac1609_4::sigRetriesExceeded, this);
-
         std::string laneChangeManeuverName = par("laneChange").stdstringValue();
         if (laneChangeManeuverName == "LaneChange")
             laneChangeManeuver = new LaneChange(this);
@@ -76,7 +71,7 @@ void LaneChangePlatooningApp::onManeuverMessage(ManeuverMessage* mm)
 }
 
 
-void LaneChangePlatooningApp::startChangeLaneManeuver(int platoonId, int )
+void LaneChangePlatooningApp::startChangeLaneManeuver(int platoonId, int leaderId)
 {
     ASSERT(getPlatoonRole() == PlatoonRole::NONE);
     ASSERT(!isInManeuver());
