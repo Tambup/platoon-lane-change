@@ -43,6 +43,10 @@ void LaneChangeManeuverScenario::prepareManeuverCars(int platoonLane)
         plexeTraciVehicle->setActiveController(ACC);
         plexeTraciVehicle->setFixedLane(platoonLane);
         app->setPlatoonRole(PlatoonRole::LEADER);
+
+        // after 3 seconds of simulation, start the maneuver
+        startManeuver = new cMessage();
+        scheduleAt(simTime() + SimTime(3), startManeuver);
     }
     else if (!positionHelper->isLeader()) {
         // these are the followers which are already in the platoon
@@ -50,17 +54,6 @@ void LaneChangeManeuverScenario::prepareManeuverCars(int platoonLane)
         plexeTraciVehicle->setActiveController(CACC);
         plexeTraciVehicle->setFixedLane(platoonLane);
         app->setPlatoonRole(PlatoonRole::FOLLOWER);
-    }
-    else {
-        // this is the leader which will merge
-        plexeTraciVehicle->setCruiseControlDesiredSpeed(100 / 3.6);
-        plexeTraciVehicle->setFixedLane(platoonLane);
-        plexeTraciVehicle->setActiveController(ACC);
-        app->setPlatoonRole(PlatoonRole::LEADER);
-
-        // after 30 seconds of simulation, start the maneuver
-        startManeuver = new cMessage();
-        scheduleAt(simTime() + SimTime(3), startManeuver);
     }
 }
 

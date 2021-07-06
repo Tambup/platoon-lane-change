@@ -49,7 +49,6 @@ namespace plexe {
  * information about it and feeding the CACC.
  * It also provides an easily extendable base for supporting arbitrary
  * maneuvers.
- * Currently, it already contains functionality for the join maneuver.
  *
  * @see BaseApp
  * @see Maneuver

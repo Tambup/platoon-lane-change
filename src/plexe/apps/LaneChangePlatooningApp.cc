@@ -45,7 +45,7 @@ void LaneChangePlatooningApp::initialize(int stage)
         if (laneChangeManeuverName == "LaneChange")
             laneChangeManeuver = new LaneChange(this);
         else
-            throw new cRuntimeError("Invalid join maneuver implementation chosen");
+            throw new cRuntimeError("Invalid laneChange maneuver implementation chosen");
 
         scenario = FindModule<BaseScenario*>::findSubModule(getParentModule());
     }
@@ -76,15 +76,12 @@ void LaneChangePlatooningApp::onManeuverMessage(ManeuverMessage* mm)
 }
 
 
-void LaneChangePlatooningApp::startChangeLaneManeuver(int platoonId, int leaderId)
+void LaneChangePlatooningApp::startChangeLaneManeuver(int platoonId, int )
 {
     ASSERT(getPlatoonRole() == PlatoonRole::NONE);
     ASSERT(!isInManeuver());
 
-    LaneChangeParameters params;
-    params.platoonId = platoonId;
-    params.leaderId = leaderId;
-    laneChangeManeuver->startManeuver(&params);
+    laneChangeManeuver->startManeuver(nullptr);
 }
 
 
