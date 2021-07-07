@@ -11,9 +11,28 @@
 namespace plexe {
 
 LaneChange::LaneChange(GeneralPlatooningApp* app)
-    :Maneuver(app)
-    ,laneChangeManeuverState(LaneChangeManeuverState::IDLE)
+    : Maneuver(app)
+    , laneChangeManeuverState(LaneChangeManeuverState::IDLE)
 {
+}
+
+bool LaneChange::handleSelfMsg(cMessage* msg)
+{
+    for (int i: positionHelper->getPlatoonFormation())
+    {
+        if (i != positionHelper->getLeaderId())
+        {
+            LOG << "Leader " << positionHelper->getId() << " sending abort to the follower with id " << i << " because timeout\n";
+            //TODO abort
+//            StartSignal* response = new StartSignal("StartSignal");
+//            app->fillManeuverMessage(response, positionHelper->getId(), positionHelper->getExternalId(), positionHelper->getPlatoonId(), i);
+//            app->sendUnicast(response, i);
+        }
+    }
+    app->setInManeuver(false, this);
+    laneChangeManeuverState = LaneChangeManeuverState::IDLE;
+
+    return true;
 }
 
 bool LaneChange::initializeLaneChangeManeuver()
@@ -28,6 +47,8 @@ bool LaneChange::initializeLaneChangeManeuver()
 
         // after successful initialization we are going to send a request and wait for a reply
         laneChangeManeuverState = LaneChangeManeuverState::WAIT_REPLY;
+
+        static_cast<LaneChangePlatooningApp*>(app)->sendTimeoutMsg();
 
         return true;
     }
@@ -114,7 +135,7 @@ void LaneChange::handleLaneChangeClose(const LaneChangeClose* msg)
     }
 }
 
-bool LaneChange::prcessleLaneChanged(const LaneChanged* msg)
+bool LaneChange::processLaneChanged(const LaneChanged* msg)
 {
     if (msg->getPlatoonId() != positionHelper->getPlatoonId()) return false;
 
@@ -129,13 +150,14 @@ bool LaneChange::prcessleLaneChanged(const LaneChanged* msg)
         if(!x.second) return false;
     }
 
+    static_cast<LaneChangePlatooningApp*>(app)->resetTimeoutMsg();
     resetReceivedAck();
     return true;
 }
 
 void LaneChange::handleLaneChanged(const LaneChanged* msg)
 {
-    if (prcessleLaneChanged(msg)) {
+    if (processLaneChanged(msg)) {
         // send response to followers
         for (int i: positionHelper->getPlatoonFormation())
         {
@@ -178,7 +200,6 @@ void LaneChange::handleStartSignal(const StartSignal* msg)
     }
 }
 
-//TODO quando non arrivano tutti gli ack entro un tot pialla receivedAck
 bool LaneChange::processWarnChangeLaneAck(const WarnChangeLaneAck* msg)
 {
     if (msg->getPlatoonId() != positionHelper->getPlatoonId()) return false;
@@ -194,6 +215,7 @@ bool LaneChange::processWarnChangeLaneAck(const WarnChangeLaneAck* msg)
         if(!x.second) return false;
     }
 
+    static_cast<LaneChangePlatooningApp*>(app)->resetTimeoutMsg();
     laneChangeManeuverState = LaneChangeManeuverState::CHANGE_LANE;
     resetReceivedAck();
     return true;
@@ -222,6 +244,8 @@ void LaneChange::handleWarnChangeLaneAck(const WarnChangeLaneAck* msg)
             }
         }
         laneChangeManeuverState = LaneChangeManeuverState::WAIT_ALL_CHANGED;
+
+        static_cast<LaneChangePlatooningApp*>(app)->sendTimeoutMsg();
     }
 }
 

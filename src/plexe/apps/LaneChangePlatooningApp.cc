@@ -49,6 +49,7 @@ void LaneChangePlatooningApp::initialize(int stage)
 void LaneChangePlatooningApp::handleSelfMsg(cMessage* msg)
 {
     if (laneChangeManeuver && laneChangeManeuver->handleSelfMsg(msg)) return;
+    else if (laneChangeManeuver && laneChangeManeuver->handleSelfMsg(msg)) return;
     BaseApp::handleSelfMsg(msg);
 }
 
@@ -92,6 +93,17 @@ void LaneChangePlatooningApp::receiveSignal(cComponent* src, simsignal_t id, cOb
     }
 }
 
+void LaneChangePlatooningApp::sendTimeoutMsg()
+{
+    timeoutMsg = new cMessage("TimeoutMsg");
+    take(timeoutMsg);
+    scheduleAt(simTime() + SimTime(2), timeoutMsg);
+}
+
+void LaneChangePlatooningApp::resetTimeoutMsg()
+{
+    cancelAndDelete(timeoutMsg);
+}
 
 LaneChangePlatooningApp::~LaneChangePlatooningApp()
 {

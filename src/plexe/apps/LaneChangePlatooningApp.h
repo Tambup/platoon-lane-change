@@ -78,7 +78,9 @@ public:
     /** override from GeneralPlatooningApp */
     virtual void handleSelfMsg(cMessage* msg) override;
 
+    void sendTimeoutMsg();
 
+    void resetTimeoutMsg();
 
 protected:
     /** used to receive the "retries exceeded" signal **/
@@ -103,6 +105,9 @@ protected:
 private:
     /** platoons change lane implementation */
     Maneuver* laneChangeManeuver;
+
+    // message used to schedule timeouts
+    cMessage* timeoutMsg;
 };
 
 } // namespace plexe
