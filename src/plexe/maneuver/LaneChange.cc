@@ -134,11 +134,8 @@ bool LaneChange::processLaneChangeClose(const LaneChangeClose* msg)
 
 void LaneChange::handleAgain(const Again* msg)
 {
-    if (true) {
-        app->setInManeuver(false, this);
-        LOG<<"STARTO MANOVRA AGAIN";
-        startManeuver(nullptr);
-    }
+    LOG<<"Restart laneChange";
+    startManeuver(nullptr);
 }
 
 
@@ -147,15 +144,13 @@ void LaneChange::handleLaneChangeClose(const LaneChangeClose* msg)
     if (processLaneChangeClose(msg)) {
         app->setInManeuver(false, this);
         laneChangeManeuverState = LaneChangeManeuverState::IDLE;
-
-
     }
-    //TODO test
-    if (positionHelper->getId() == 3){
-        Again* response = new Again("Again");
-        app->fillManeuverMessage(response, positionHelper->getId(), positionHelper->getExternalId(), positionHelper->getPlatoonId(), positionHelper->getLeaderId());
-        app->sendUnicast(response, positionHelper->getLeaderId());
-    }
+//TODO test, is only for restart infinite time the maneuver for testing.
+//    if (positionHelper->getId() == 3){
+//        Again* response = new Again("Again");
+//        app->fillManeuverMessage(response, positionHelper->getId(), positionHelper->getExternalId(), positionHelper->getPlatoonId(), positionHelper->getLeaderId());
+//        app->sendUnicast(response, positionHelper->getLeaderId());
+//    }
 }
 
 bool LaneChange::processLaneChanged(const LaneChanged* msg)
