@@ -71,6 +71,12 @@ public:
      */
     void handleLaneChangeClose(const LaneChangeClose* msg);
 
+    /**
+     * Handles an Abort message in the context of this application
+     *
+     */
+    void handleAbort();
+
     virtual void abortManeuver() override;
     virtual void onFailedTransmissionAttempt(const ManeuverMessage* mm) override;
     virtual void onManeuverMessage(const ManeuverMessage* mm) override;

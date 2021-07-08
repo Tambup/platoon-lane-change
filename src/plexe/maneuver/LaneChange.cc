@@ -8,6 +8,7 @@
 #include "plexe/messages/LaneChanged_m.h"
 #include "plexe/messages/LaneChangeClose_m.h"
 #include "plexe/messages/Again_m.h"
+#include "plexe/messages/Abort_m.h"
 
 
 namespace plexe {
@@ -20,19 +21,10 @@ LaneChange::LaneChange(GeneralPlatooningApp* app)
 
 bool LaneChange::handleSelfMsg(cMessage* msg)
 {
-    for (int i: positionHelper->getPlatoonFormation())
-    {
-        if (i != positionHelper->getLeaderId())
-        {
-            LOG << "Leader " << positionHelper->getId() << " sending abort to the follower with id " << i << " because timeout\n";
-            //TODO abort
-//            StartSignal* response = new StartSignal("StartSignal");
-//            app->fillManeuverMessage(response, positionHelper->getId(), positionHelper->getExternalId(), positionHelper->getPlatoonId(), i);
-//            app->sendUnicast(response, i);
-        }
+    std::string title = msg->getName();
+    if (title.compare("TimeoutMsg") == 0) {
+        abortManeuver();
     }
-    app->setInManeuver(false, this);
-    laneChangeManeuverState = LaneChangeManeuverState::IDLE;
 
     return true;
 }
@@ -89,9 +81,26 @@ void LaneChange::startManeuver(const void* parameters)
     }
 }
 
+void LaneChange::handleAbort()
+{
+    app->setInManeuver(false, this);
+    laneChangeManeuverState = LaneChangeManeuverState::IDLE;
+}
+
 void LaneChange::abortManeuver()
 {
-
+    for (int i: positionHelper->getPlatoonFormation())
+    {
+        if (i != positionHelper->getId())
+        {
+            LOG << "Platoon member " << positionHelper->getId() << " sending Abort to member " << i << "\n";
+            Abort* response = new Abort("Abort");
+            app->fillManeuverMessage(response, positionHelper->getId(), positionHelper->getExternalId(), positionHelper->getPlatoonId(), i);
+            app->sendUnicast(response, i);
+        }
+    }
+    app->setInManeuver(false, this);
+    laneChangeManeuverState = LaneChangeManeuverState::IDLE;
 }
 
 void LaneChange::onFailedTransmissionAttempt(const ManeuverMessage* mm)
@@ -118,6 +127,8 @@ void LaneChange::onManeuverMessage(const ManeuverMessage* mm)
         handleLaneChangeClose(msg);
     } else if (const Again* msg = dynamic_cast<const Again*>(mm)) {
         handleAgain(msg);
+    } else if (const Abort* msg = dynamic_cast<const Abort*>(mm)) {
+        handleAbort();
     }
 }
 
@@ -127,7 +138,7 @@ bool LaneChange::processLaneChangeClose(const LaneChangeClose* msg)
 
     if (app->getPlatoonRole() != PlatoonRole::FOLLOWER) return false;
 
-    if (laneChangeManeuverState != LaneChangeManeuverState::COMPLETE_LANE_CHANGE && !app->isInManeuver()) return false;
+    if (laneChangeManeuverState != LaneChangeManeuverState::COMPLETE_LANE_CHANGE || !app->isInManeuver()) return false;
 
     return true;
 }
@@ -144,6 +155,8 @@ void LaneChange::handleLaneChangeClose(const LaneChangeClose* msg)
     if (processLaneChangeClose(msg)) {
         app->setInManeuver(false, this);
         laneChangeManeuverState = LaneChangeManeuverState::IDLE;
+    } else {
+        abortManeuver();
     }
 //TODO test, is only for restart infinite time the maneuver for testing.
 //    if (positionHelper->getId() == 3){
@@ -159,7 +172,7 @@ bool LaneChange::processLaneChanged(const LaneChanged* msg)
 
     if (app->getPlatoonRole() != PlatoonRole::LEADER) return false;
 
-    if (laneChangeManeuverState != LaneChangeManeuverState::WAIT_ALL_CHANGED && !app->isInManeuver()) return false;
+    if (laneChangeManeuverState != LaneChangeManeuverState::WAIT_ALL_CHANGED || !app->isInManeuver()) return false;
 
     receivedAck[msg->getVehicleId()] = true;
 
@@ -198,7 +211,7 @@ bool LaneChange::processStartSignal(const StartSignal* msg)
 
     if (app->getPlatoonRole() != PlatoonRole::FOLLOWER) return false;
 
-    if (laneChangeManeuverState != LaneChangeManeuverState::PREPARE_LANE_CHANGE && !app->isInManeuver()) return false;
+    if (laneChangeManeuverState != LaneChangeManeuverState::PREPARE_LANE_CHANGE || !app->isInManeuver()) return false;
 
 
     laneChangeManeuverState = LaneChangeManeuverState::CHANGE_LANE;
@@ -216,6 +229,8 @@ void LaneChange::handleStartSignal(const StartSignal* msg)
         LaneChanged* response = new LaneChanged("LaneChanged");
         app->fillManeuverMessage(response, positionHelper->getId(), positionHelper->getExternalId(), positionHelper->getPlatoonId(), msg->getVehicleId());
         app->sendUnicast(response, msg->getVehicleId());
+    } else {
+        abortManeuver();
     }
 }
 
@@ -225,7 +240,7 @@ bool LaneChange::processWarnChangeLaneAck(const WarnChangeLaneAck* msg)
 
     if (app->getPlatoonRole() != PlatoonRole::LEADER) return false;
 
-    if (laneChangeManeuverState != LaneChangeManeuverState::WAIT_REPLY && !app->isInManeuver()) return false;
+    if (laneChangeManeuverState != LaneChangeManeuverState::WAIT_REPLY || !app->isInManeuver()) return false;
 
     receivedAck[msg->getVehicleId()] = true;
 
@@ -302,7 +317,7 @@ void LaneChange::handleWarnChangeLane(const WarnChangeLane* msg)
         app->fillManeuverMessage(response, positionHelper->getId(), positionHelper->getExternalId(), positionHelper->getPlatoonId(), msg->getVehicleId());
         app->sendUnicast(response, msg->getVehicleId());
     } else {
-        //TODO call abort
+        abortManeuver();
     }
 }
 

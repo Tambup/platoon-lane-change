@@ -25,7 +25,7 @@ cplusplus{{
 
 packet ManeuverMessage;
 
-// Request to execute again the meneuver.
-// Is sent from a member to platoon leader.
-packet Again extends ManeuverMessage {
+// Advert that an abort is necessary.
+// Is sent from a member to others.
+packet Abort extends ManeuverMessage {
 }
