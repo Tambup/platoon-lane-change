@@ -7,6 +7,8 @@
 #include "plexe/messages/StartSignal_m.h"
 #include "plexe/messages/LaneChanged_m.h"
 #include "plexe/messages/LaneChangeClose_m.h"
+#include "plexe/messages/Again_m.h"
+
 
 namespace plexe {
 
@@ -93,6 +95,8 @@ void LaneChange::onManeuverMessage(const ManeuverMessage* mm)
         handleLaneChanged(msg);
     } else if (const LaneChangeClose* msg = dynamic_cast<const LaneChangeClose*>(mm)) {
         handleLaneChangeClose(msg);
+    } else if (const Again* msg = dynamic_cast<const Again*>(mm)) {
+        handleAgain(msg);
     }
 }
 
@@ -107,10 +111,29 @@ bool LaneChange::processLaneChangeClose(const LaneChangeClose* msg)
     return true;
 }
 
+void LaneChange::handleAgain(const Again* msg)
+{
+    if (true) {
+        app->setInManeuver(false, this);
+        LOG<<"STARTO MANOVRA AGAIN";
+        startManeuver(nullptr);
+    }
+}
+
+
 void LaneChange::handleLaneChangeClose(const LaneChangeClose* msg)
 {
     if (processLaneChangeClose(msg)) {
+        app->setInManeuver(false, this);
         laneChangeManeuverState = LaneChangeManeuverState::IDLE;
+
+
+    }
+    //TODO test
+    if (positionHelper->getId() == 3){
+        Again* response = new Again("Again");
+        app->fillManeuverMessage(response, positionHelper->getId(), positionHelper->getExternalId(), positionHelper->getPlatoonId(), positionHelper->getLeaderId());
+        app->sendUnicast(response, positionHelper->getLeaderId());
     }
 }
 
@@ -147,6 +170,7 @@ void LaneChange::handleLaneChanged(const LaneChanged* msg)
                 app->sendUnicast(response, i);
             }
         }
+        app->setInManeuver(false, this);
         laneChangeManeuverState = LaneChangeManeuverState::IDLE;
     }
 }
@@ -203,7 +227,18 @@ void LaneChange::handleWarnChangeLaneAck(const WarnChangeLaneAck* msg)
 {
     double duration = 0;
     //TODO determinare la destinazione in maniera sensata
-    int destination = 1;
+
+    std::set<int> possibleDestination;
+
+    if ((positionHelper->getPlatoonLane() +1) < plexeTraciVehicle->getLanesCount()){
+        possibleDestination.insert(positionHelper->getPlatoonLane() + 1);
+    }
+    if((positionHelper->getPlatoonLane() -1) != -1){
+        possibleDestination.insert(positionHelper->getPlatoonLane() - 1);
+    }
+
+    int destination = *next(possibleDestination.begin(), rand()%possibleDestination.size());
+
     if (processWarnChangeLaneAck(msg)) {
         plexeTraciVehicle->setFixedLane(destination, true);
         positionHelper->setPlatoonLane(destination);
@@ -231,7 +266,7 @@ bool LaneChange::processWarnChangeLane(const WarnChangeLane* msg)
 
     if (app->getPlatoonRole() != PlatoonRole::FOLLOWER) return false;
 
-    if (laneChangeManeuverState != LaneChangeManeuverState::IDLE && app->isInManeuver()) return false;
+    if (laneChangeManeuverState != LaneChangeManeuverState::IDLE || app->isInManeuver()) return false;
 
     app->setInManeuver(true, this);
 

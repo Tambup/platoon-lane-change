@@ -10,6 +10,7 @@
 #include "plexe/messages/StartSignal_m.h"
 #include "plexe/messages/LaneChanged_m.h"
 #include "plexe/messages/LaneChangeClose_m.h"
+#include "plexe/messages/Again_m.h"
 
 using namespace veins;
 
@@ -46,6 +47,8 @@ public:
      * @param WarnChangeLaneAck msg to handle
      */
     void handleWarnChangeLaneAck(const WarnChangeLaneAck* mm);
+    //TODO eminare test
+    void handleAgain(const Again* msg);
 
     /**
      * Handles a StartSignal in the context of this application
