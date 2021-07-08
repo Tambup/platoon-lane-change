@@ -243,7 +243,6 @@ bool LaneChange::processWarnChangeLaneAck(const WarnChangeLaneAck* msg)
 void LaneChange::handleWarnChangeLaneAck(const WarnChangeLaneAck* msg)
 {
     double duration = 0;
-    //TODO determinare la destinazione in maniera sensata
 
     std::set<int> possibleDestination;
 
