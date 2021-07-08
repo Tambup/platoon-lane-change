@@ -105,7 +105,7 @@ protected:
     bool processStartSignal(const StartSignal* msg);
 
     /** initializes the handling of a LaneChanged message */
-    bool prcessleLaneChanged(const LaneChanged* msg);
+    bool processLaneChanged(const LaneChanged* msg);
 
     /** initializes the handling of a LaneChangeClose message */
     bool processLaneChangeClose(const LaneChangeClose* msg);
@@ -113,6 +113,8 @@ protected:
 private:
     void sendLaneChangeRequest(int leaderId, std::string externalId, int platoonId);
     void resetReceivedAck();
+
+    virtual bool handleSelfMsg(cMessage* msg) override;
 
     std::map<int, bool> receivedAck;
 };

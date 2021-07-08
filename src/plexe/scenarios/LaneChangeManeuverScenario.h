@@ -33,7 +33,6 @@ protected:
     cMessage* startManeuver;
     // pointer to protocol
     LaneChangePlatooningApp* app;
-
 public:
     static const int MANEUVER_TYPE = 12347;
 
