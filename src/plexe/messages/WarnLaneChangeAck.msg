@@ -25,9 +25,9 @@ cplusplus{{
 
 packet ManeuverMessage;
 
-// Request to a platoon to change lane.
-// Is sent from a leader of platoon to all platoon members.
-packet WarnChangeLane extends ManeuverMessage {
-    // the id of the lane to the platoon destination
-    int platoonLaneDestination;
+// Notify the leader if it is possible to change lane.
+// Is sent from a platoon members to leader.
+packet WarnLaneChangeAck extends ManeuverMessage {
+    // if members reach warnchangelane request
+    bool response;
 }

@@ -5,8 +5,8 @@
 
 #include "plexe/maneuver/Maneuver.h"
 
-#include "plexe/messages/WarnChangeLane_m.h"
-#include "plexe/messages/WarnChangeLaneAck_m.h"
+#include "plexe/messages/WarnLaneChange_m.h"
+#include "plexe/messages/WarnLaneChangeAck_m.h"
 #include "plexe/messages/StartSignal_m.h"
 #include "plexe/messages/LaneChanged_m.h"
 #include "plexe/messages/LaneChangeClose_m.h"
@@ -35,18 +35,18 @@ public:
     virtual void startManeuver(const void* parameters) override;
 
     /**
-     * Handles a WarnChangeLane in the context of this application
+     * Handles a WarnLaneChange in the context of this application
      *
-     * @param WarnChangeLane msg to handle
+     * @param WarnLaneChange msg to handle
      */
-    void handleWarnChangeLane(const WarnChangeLane* mm);
+    void handleWarnLaneChange(const WarnLaneChange* mm);
 
     /**
-     * Handles a handleWarnChangeLaneAck in the context of this application
+     * Handles a handleWarnLaneChangeAck in the context of this application
      *
-     * @param WarnChangeLaneAck msg to handle
+     * @param WarnLaneChangeAck msg to handle
      */
-    void handleWarnChangeLaneAck(const WarnChangeLaneAck* mm);
+    void handleWarnLaneChangeAck(const WarnLaneChangeAck* mm);
     //TODO eminare test
     void handleAgain(const Again* msg);
 
@@ -85,13 +85,12 @@ protected:
     /** Possible states a vehicle can be in during a laneChange maneuver */
     enum class LaneChangeManeuverState {
         IDLE, ///< The maneuver did not start
-        CHANGE_LANE, ///< The maneuver is running
+        LANE_CHANGE, ///< The maneuver is running
         // LEADER
         WAIT_REPLY, ///< The Leader is waiting all platoon members response
         WAIT_ALL_CHANGED, ///< The Leader is waiting all platoon members finished the maneuver
         // FOLLOWER
         PREPARE_LANE_CHANGE, ///< The follower evalueate if is possible to change and if possible send an ack
-        WAIT_START_SIGNAL, ///< The follower waits for the Leader start message
         COMPLETE_LANE_CHANGE ///< The follower advert the successfully end of the maneuver
     };
 
@@ -101,11 +100,11 @@ protected:
     /** initializes a laneChange maneuver, setting up required data */
     bool initializeLaneChangeManeuver();
 
-    /** initializes the handling of a WarnChangeLane */
-    bool processWarnChangeLane(const WarnChangeLane* msg);
+    /** initializes the handling of a WarnLaneChange */
+    bool processWarnLaneChange(const WarnLaneChange* msg);
 
-    /** initializes the handling of a WarnChangeLane */
-    bool processWarnChangeLaneAck(const WarnChangeLaneAck* msg);
+    /** initializes the handling of a WarnLaneChange */
+    bool processWarnLaneChangeAck(const WarnLaneChangeAck* msg);
 
     /** initializes the handling of a StartSignal */
     bool processStartSignal(const StartSignal* msg);
