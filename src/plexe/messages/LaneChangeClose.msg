@@ -25,8 +25,8 @@ cplusplus{{
 
 packet ManeuverMessage;
 
-// Request to a platoon to change lane.
+// this message close the maneuver
 // Is sent from leader to followers
 packet LaneChangeClose extends ManeuverMessage {
-	//this message close the maneuver
+	
 }

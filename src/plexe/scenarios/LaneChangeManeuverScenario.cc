@@ -37,6 +37,24 @@ void LaneChangeManeuverScenario::initialize(int stage)
 
 void LaneChangeManeuverScenario::prepareManeuverCars(int platoonLane)
 {
+
+    const char* strController = par("otherCarController").stringValue();
+    ACTIVE_CONTROLLER otherCar;
+    if (strcmp(strController, "ACC") == 0) {
+        otherCar = ACC;
+    } else if (strcmp(strController, "CACC") == 0) {
+        otherCar = CACC;
+    } else if (strcmp(strController, "PLOEG") == 0) {
+        otherCar = PLOEG;
+    } else if (strcmp(strController, "CONSENSUS") == 0) {
+        otherCar = CONSENSUS;
+    } else if (strcmp(strController, "FLATBED") == 0) {
+        otherCar = FLATBED;
+    } else if (strcmp(strController, "DRIVER") == 0) {
+        otherCar = DRIVER;
+    } else {
+        throw cRuntimeError("Invalid controller selected");
+    }
     if (positionHelper->getId() == 0) {
         // this is the leader of the platoon ahead
         plexeTraciVehicle->setCruiseControlDesiredSpeed(100.0 / 3.6);
@@ -57,7 +75,7 @@ void LaneChangeManeuverScenario::prepareManeuverCars(int platoonLane)
             plexeTraciVehicle->setFixedLane(platoonLane);
             app->setPlatoonRole(PlatoonRole::FOLLOWER);
         } else {
-            plexeTraciVehicle->setActiveController(DRIVER);
+            plexeTraciVehicle->setActiveController(otherCar);
             //plexeTraciVehicle->setCruiseControlDesiredSpeed(50.0 / 3.6);
             plexeTraciVehicle->setFixedLane(1);
         }

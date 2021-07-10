@@ -27,4 +27,6 @@ simple LaneChangeManeuverScenario extends BBaseScenario
     parameters:
         @display("i=block/app2");
         @class(plexe::LaneChangeManeuverScenario);
+        
+        string otherCarController;
 }
