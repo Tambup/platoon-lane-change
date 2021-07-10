@@ -113,6 +113,10 @@ void PlatoonsTrafficManager::insertPlatoons()
         }
     }
 
+    automated.position = 0;
+    automated.lane = 1;
+    addVehicleToQueue(0, automated);
+
     delete[] laneOffset;
 }
 

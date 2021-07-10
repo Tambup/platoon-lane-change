@@ -29,7 +29,5 @@ packet ManeuverMessage;
 // Is sent from a leader of platoon to all platoon members.
 packet WarnChangeLane extends ManeuverMessage {
     // the id of the lane to the platoon destination
-    int plattonLaneDestination;
-    // the angle of maneuver
-    int theta;
+    int platoonLaneDestination;
 }

@@ -29,13 +29,27 @@ bool LaneChange::handleSelfMsg(cMessage* msg)
     return true;
 }
 
+bool LaneChange::isLaneFree(int destination)
+{
+    int state, state2;
+    plexeTraciVehicle->getLaneChangeState(destination-positionHelper->getPlatoonLane(), state, state2);
+    if ((state & (1 << 13)) != 0)
+    {
+        LOG << positionHelper->getId() << " cannot begin the maneuver because lane " << destination << " is occupied\n";
+        return false;
+    }
+    return true;
+}
+
 bool LaneChange::initializeLaneChangeManeuver()
 {
     if (laneChangeManeuverState == LaneChangeManeuverState::IDLE && app->getPlatoonRole() == PlatoonRole::LEADER) {
-        if (app->isInManeuver()) {
+        if (app->isInManeuver())
+        {
             LOG << positionHelper->getId() << " cannot begin the maneuver because already involved in another one\n";
             return false;
         }
+        if (!isLaneFree(nextDestination)) return false;
 
         app->setInManeuver(true, this);
 
@@ -57,6 +71,7 @@ void LaneChange::sendLaneChangeRequest(int leaderId, std::string externalId, int
         if (i != leaderId){
             LOG << positionHelper->getId() << " sending laneChangeRequest to " << i << "\n";
             WarnChangeLane* msg = new WarnChangeLane("WarnChangeLane");
+            msg->setPlatoonLaneDestination(nextDestination);
             app->fillManeuverMessage(msg, leaderId, externalId, platoonId, i);
             app->sendUnicast(msg, i);
         }
@@ -73,6 +88,7 @@ void LaneChange::resetReceivedAck() {
 
 void LaneChange::startManeuver(const void* parameters)
 {
+    nextDestination = destination();
     if (initializeLaneChangeManeuver())
     {
         resetReceivedAck();
@@ -83,6 +99,7 @@ void LaneChange::startManeuver(const void* parameters)
 
 void LaneChange::handleAbort()
 {
+    nextDestination = -1;
     app->setInManeuver(false, this);
     laneChangeManeuverState = LaneChangeManeuverState::IDLE;
 }
@@ -99,6 +116,7 @@ void LaneChange::abortManeuver()
             app->sendUnicast(response, i);
         }
     }
+    nextDestination = -1;
     app->setInManeuver(false, this);
     laneChangeManeuverState = LaneChangeManeuverState::IDLE;
 }
@@ -153,6 +171,7 @@ void LaneChange::handleAgain(const Again* msg)
 void LaneChange::handleLaneChangeClose(const LaneChangeClose* msg)
 {
     if (processLaneChangeClose(msg)) {
+        nextDestination = -1;
         app->setInManeuver(false, this);
         laneChangeManeuverState = LaneChangeManeuverState::IDLE;
     } else {
@@ -200,6 +219,7 @@ void LaneChange::handleLaneChanged(const LaneChanged* msg)
                 app->sendUnicast(response, i);
             }
         }
+        nextDestination = -1;
         app->setInManeuver(false, this);
         laneChangeManeuverState = LaneChangeManeuverState::IDLE;
     }
@@ -213,6 +233,7 @@ bool LaneChange::processStartSignal(const StartSignal* msg)
 
     if (laneChangeManeuverState != LaneChangeManeuverState::PREPARE_LANE_CHANGE || !app->isInManeuver()) return false;
 
+    if (nextDestination < 0) return false;
 
     laneChangeManeuverState = LaneChangeManeuverState::CHANGE_LANE;
     return true;
@@ -221,8 +242,10 @@ bool LaneChange::processStartSignal(const StartSignal* msg)
 void LaneChange::handleStartSignal(const StartSignal* msg)
 {
     if (processStartSignal(msg)) {
-        plexeTraciVehicle->setFixedLane(msg->getDestinationLane(), false);
-        positionHelper->setPlatoonLane(msg->getDestinationLane());
+        plexeTraciVehicle->setFixedLane(nextDestination, false);
+        positionHelper->setPlatoonLane(nextDestination);
+
+        laneChangeManeuverState = LaneChangeManeuverState::COMPLETE_LANE_CHANGE;
 
         // send response to the leader
         LOG << positionHelper->getId() << " sending laneChanged to the leader (" << msg->getVehicleId() << ")\n";
@@ -255,41 +278,46 @@ bool LaneChange::processWarnChangeLaneAck(const WarnChangeLaneAck* msg)
     return true;
 }
 
-void LaneChange::handleWarnChangeLaneAck(const WarnChangeLaneAck* msg)
+int LaneChange::destination()
 {
-    double duration = 0;
-
     std::set<int> possibleDestination;
 
-    if ((positionHelper->getPlatoonLane() +1) < plexeTraciVehicle->getLanesCount()){
+    if ((positionHelper->getPlatoonLane() + 1) < plexeTraciVehicle->getLanesCount())
+    {
         possibleDestination.insert(positionHelper->getPlatoonLane() + 1);
     }
-    if((positionHelper->getPlatoonLane() -1) != -1){
+    if((positionHelper->getPlatoonLane() - 1) != -1)
+    {
         possibleDestination.insert(positionHelper->getPlatoonLane() - 1);
     }
 
-    int destination = *next(possibleDestination.begin(), rand()%possibleDestination.size());
+    return *next(possibleDestination.begin(), rand()%possibleDestination.size());
+}
 
+void LaneChange::handleWarnChangeLaneAck(const WarnChangeLaneAck* msg)
+{
     if (processWarnChangeLaneAck(msg)) {
-        plexeTraciVehicle->setFixedLane(destination, true);
-        positionHelper->setPlatoonLane(destination);
-
-        // send response to followers
-        for (int i: positionHelper->getPlatoonFormation())
+        if (nextDestination >= 0)
         {
-            if (i != positionHelper->getLeaderId())
-            {
-                LOG << "Leader " << positionHelper->getId() << " sending startSignal to the follower with id " << i << "\n";
-                StartSignal* response = new StartSignal("StartSignal");
-                response->setLaneChangeDutration(duration);
-                response->setDestinationLane(destination);
-                app->fillManeuverMessage(response, positionHelper->getId(), positionHelper->getExternalId(), positionHelper->getPlatoonId(), i);
-                app->sendUnicast(response, i);
-            }
-        }
-        laneChangeManeuverState = LaneChangeManeuverState::WAIT_ALL_CHANGED;
+            plexeTraciVehicle->setFixedLane(nextDestination, false);
+            positionHelper->setPlatoonLane(nextDestination);
 
-        static_cast<LaneChangePlatooningApp*>(app)->sendTimeoutMsg();
+            // send response to followers
+            for (int i: positionHelper->getPlatoonFormation())
+            {
+                if (i != positionHelper->getLeaderId())
+                {
+                    LOG << "Leader " << positionHelper->getId() << " sending startSignal to the follower with id " << i << "\n";
+                    StartSignal* response = new StartSignal("StartSignal");
+                    app->fillManeuverMessage(response, positionHelper->getId(), positionHelper->getExternalId(), positionHelper->getPlatoonId(), i);
+                    app->sendUnicast(response, i);
+                }
+            }
+            laneChangeManeuverState = LaneChangeManeuverState::WAIT_ALL_CHANGED;
+
+            static_cast<LaneChangePlatooningApp*>(app)->sendTimeoutMsg();
+        } else
+            abortManeuver();
     }
 }
 
@@ -301,6 +329,8 @@ bool LaneChange::processWarnChangeLane(const WarnChangeLane* msg)
 
     if (laneChangeManeuverState != LaneChangeManeuverState::IDLE || app->isInManeuver()) return false;
 
+    if (!isLaneFree(msg->getPlatoonLaneDestination())) return false;
+
     app->setInManeuver(true, this);
 
     laneChangeManeuverState = LaneChangeManeuverState::PREPARE_LANE_CHANGE;
@@ -310,6 +340,7 @@ bool LaneChange::processWarnChangeLane(const WarnChangeLane* msg)
 void LaneChange::handleWarnChangeLane(const WarnChangeLane* msg)
 {
     if (processWarnChangeLane(msg)) {
+        nextDestination = msg->getPlatoonLaneDestination();
         // send response to the leader
         LOG << positionHelper->getId() << " sending WarnChangeLaneAck to the leader (" << msg->getVehicleId() << ")\n";
         WarnChangeLaneAck* response = new WarnChangeLaneAck("WarnChangeLaneAck");

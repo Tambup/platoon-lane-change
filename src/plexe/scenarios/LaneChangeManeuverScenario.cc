@@ -49,11 +49,18 @@ void LaneChangeManeuverScenario::prepareManeuverCars(int platoonLane)
         scheduleAt(simTime() + SimTime(3), startManeuver);
     }
     else if (!positionHelper->isLeader()) {
-        // these are the followers which are already in the platoon
-        plexeTraciVehicle->setCruiseControlDesiredSpeed(130.0 / 3.6);
-        plexeTraciVehicle->setActiveController(CACC);
-        plexeTraciVehicle->setFixedLane(platoonLane);
-        app->setPlatoonRole(PlatoonRole::FOLLOWER);
+        if (positionHelper->getId() < 4)
+        {
+            // these are the followers which are already in the platoon
+            plexeTraciVehicle->setCruiseControlDesiredSpeed(130.0 / 3.6);
+            plexeTraciVehicle->setActiveController(CACC);
+            plexeTraciVehicle->setFixedLane(platoonLane);
+            app->setPlatoonRole(PlatoonRole::FOLLOWER);
+        } else {
+            plexeTraciVehicle->setActiveController(DRIVER);
+            //plexeTraciVehicle->setCruiseControlDesiredSpeed(50.0 / 3.6);
+            plexeTraciVehicle->setFixedLane(1);
+        }
     }
 }
 

@@ -120,9 +120,15 @@ private:
     void sendLaneChangeRequest(int leaderId, std::string externalId, int platoonId);
     void resetReceivedAck();
 
+    int destination();
+
+    bool isLaneFree(int destination);
+
     virtual bool handleSelfMsg(cMessage* msg) override;
 
     std::map<int, bool> receivedAck;
+    // -1 no destination value
+    int nextDestination = -1;
 };
 
 } // namespace plexe
