@@ -123,7 +123,7 @@ void LaneChange::abortManeuver()
 
 void LaneChange::onFailedTransmissionAttempt(const ManeuverMessage* mm)
 {
-
+    throw cRuntimeError("Impossible to send this packet: %s. Maximum number of unicast retries reached", mm->getName());
 }
 
 void LaneChange::onPlatoonBeacon(const PlatooningBeacon* pb)

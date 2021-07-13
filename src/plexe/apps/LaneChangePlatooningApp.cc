@@ -97,7 +97,7 @@ void LaneChangePlatooningApp::sendTimeoutMsg()
 {
     timeoutMsg = new cMessage("TimeoutMsg");
     take(timeoutMsg);
-    scheduleAt(simTime() + SimTime(2), timeoutMsg);
+    scheduleAt(simTime() + SimTime(0.20), timeoutMsg);
 }
 
 void LaneChangePlatooningApp::resetTimeoutMsg()
