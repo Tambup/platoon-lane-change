@@ -26,3 +26,5 @@ Julian Heinovski
 Stefan Joerer
 Max Schettler
 Christoph Sommer
+Alberto Rovetta (LaneChange maneuver)
+Alberto Tamburini (LaneChange maneuver)
