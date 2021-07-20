@@ -39,6 +39,7 @@ public:
     virtual void initialize(int stage) override;
 
 private:
+    ACTIVE_CONTROLLER getEnum(const char* str);
 public:
     LaneChangeManeuverScenario()
     {

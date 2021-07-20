@@ -34,6 +34,8 @@ parameters:
 	
 	string mergeManeuver;
 
+	int securityDistance;
+
     int headerLength @unit("bit") = default(0 bit);
     @display("i=block/app2");
     @class(plexe::LaneChangePlatooningApp);

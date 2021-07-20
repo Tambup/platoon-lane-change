@@ -13,9 +13,10 @@
 
 namespace plexe {
 
-LaneChange::LaneChange(GeneralPlatooningApp* app)
+LaneChange::LaneChange(GeneralPlatooningApp* app, int securityDistance)
     : Maneuver(app)
     , laneChangeManeuverState(LaneChangeManeuverState::IDLE)
+    , securityDistance(securityDistance)
 {
 }
 
@@ -33,7 +34,11 @@ bool LaneChange::isLaneFree(int destination)
 {
     int state, state2;
     plexeTraciVehicle->getLaneChangeState(destination-positionHelper->getPlatoonLane(), state, state2);
-    if ((state & (1 << 13)) != 0)
+    int direction = destination-positionHelper->getPlatoonLane() > 0 ? 0 : 1;
+    double minBack = plexeTraciVehicle->getMinNeighDistance(direction, 0);
+    double minFront = plexeTraciVehicle->getMinNeighDistance(direction, 1);
+
+    if ((state & (1 << 13)) != 0 || minBack < securityDistance || minFront < securityDistance)
     {
         LOG << positionHelper->getId() << " cannot begin the maneuver because lane " << destination << " is occupied\n";
         return false;

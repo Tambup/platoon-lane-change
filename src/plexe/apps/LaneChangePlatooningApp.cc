@@ -38,7 +38,7 @@ void LaneChangePlatooningApp::initialize(int stage)
     if (stage == 1) {
         std::string laneChangeManeuverName = par("laneChange").stdstringValue();
         if (laneChangeManeuverName == "LaneChange")
-            laneChangeManeuver = new LaneChange(this);
+            laneChangeManeuver = new LaneChange(this, par("securityDistance").intValue());
         else
             throw new cRuntimeError("Invalid laneChange maneuver implementation chosen");
 
@@ -97,7 +97,7 @@ void LaneChangePlatooningApp::sendTimeoutMsg()
 {
     timeoutMsg = new cMessage("TimeoutMsg");
     take(timeoutMsg);
-    scheduleAt(simTime() + SimTime(0.5), timeoutMsg);
+    scheduleAt(simTime() + SimTime(1), timeoutMsg);
 }
 
 void LaneChangePlatooningApp::resetTimeoutMsg()

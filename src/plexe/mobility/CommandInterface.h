@@ -45,6 +45,12 @@ public:
         {
         }
 
+        /**
+         * direction: query lateral direction (left:0, right:1)
+         * longitudinal direction: query longitudinal direction (behind:0, ahead:1)
+         */
+        double getMinNeighDistance(uint8_t direction, uint8_t longitudinalDirection);
+
         void setLaneChangeMode(int mode);
         void getLaneChangeState(int direction, int& state1, int& state2);
         void changeLane(int lane, double duration);

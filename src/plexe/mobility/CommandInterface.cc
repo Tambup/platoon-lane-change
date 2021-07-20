@@ -38,6 +38,42 @@ CommandInterface::CommandInterface(cComponent* owner, veins::TraCICommandInterfa
 {
 }
 
+double CommandInterface::Vehicle::getMinNeighDistance(uint8_t direction, uint8_t longitudinalDirection)
+{
+    TraCIBuffer response = cifc->connection->query(CMD_GET_VEHICLE_VARIABLE, TraCIBuffer()
+            << static_cast<uint8_t>(0xBF) << nodeId
+            << static_cast<uint8_t>(TYPE_UBYTE) << static_cast<uint8_t>(0b000 | longitudinalDirection<<1 | direction));
+
+    uint8_t cmdLength;
+    response >> cmdLength;
+    uint8_t responseId;
+    response >> responseId;
+    ASSERT(responseId == RESPONSE_GET_VEHICLE_VARIABLE);
+    uint8_t variable;
+    response >> variable;
+    ASSERT(variable == 0xBF);
+    std::string id;
+    response >> id;
+    uint8_t type;
+    response >> type;
+    ASSERT(type == TYPE_STRINGLIST);
+    int len;
+    response >> len;
+
+    double min = 10000;
+    for (int i=0; i<len; i++)
+    {
+        std::string vehicleName;
+        response >> vehicleName;
+        double distance;
+        response >> distance;
+        distance = distance < 0 ? 0 : distance;
+        min = distance < min ? distance : min;
+    }
+
+    return min;
+}
+
 void CommandInterface::Vehicle::setLaneChangeMode(int mode)
 {
     uint8_t variableId = VAR_LANECHANGE_MODE;

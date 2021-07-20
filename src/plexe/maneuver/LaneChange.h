@@ -24,7 +24,7 @@ public:
      *
      * @param app pointer to the generic application used to fetch parameters and inform it about a concluded maneuver
      */
-    LaneChange(GeneralPlatooningApp* app);
+    LaneChange(GeneralPlatooningApp* app, int securityDistance);
     ~LaneChange(){};
 
     /**
@@ -128,6 +128,7 @@ private:
     std::map<int, bool> receivedAck;
     // -1 no destination value
     int nextDestination = -1;
+    int securityDistance;
 };
 
 } // namespace plexe
