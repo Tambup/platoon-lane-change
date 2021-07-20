@@ -29,6 +29,7 @@ simple LaneChangeManeuverScenario extends BBaseScenario
         @class(plexe::LaneChangeManeuverScenario);
         
         string otherCarController;
+        int numberOfCars;
         int numberOfCarsPerPlatoon;
         
         int meneuverTime;
