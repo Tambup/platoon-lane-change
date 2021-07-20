@@ -37,8 +37,14 @@ void LaneChangeManeuverScenario::initialize(int stage)
 
 void LaneChangeManeuverScenario::prepareManeuverCars(int platoonLane)
 {
-
     const char* strController = par("otherCarController").stringValue();
+    const int numberOfCars = par("numberOfCarsPerPlatoon").intValue();
+
+    const int meneuverTime = par("meneuverTime").intValue();
+
+    const int desiredPlatoonSpeed = par("desiredPlatoonSpeed").intValue();
+    const int desiredOtherCarSpeed = par("desiredOtherCarSpeed").intValue();
+
     ACTIVE_CONTROLLER otherCar;
     if (strcmp(strController, "ACC") == 0) {
         otherCar = ACC;
@@ -57,17 +63,17 @@ void LaneChangeManeuverScenario::prepareManeuverCars(int platoonLane)
     }
     if (positionHelper->getId() == 0) {
         // this is the leader of the platoon ahead
-        plexeTraciVehicle->setCruiseControlDesiredSpeed(100.0 / 3.6);
+        plexeTraciVehicle->setCruiseControlDesiredSpeed(desiredPlatoonSpeed / 3.6);
         plexeTraciVehicle->setActiveController(ACC);
         plexeTraciVehicle->setFixedLane(platoonLane);
         app->setPlatoonRole(PlatoonRole::LEADER);
 
         // after 3 seconds of simulation, start the maneuver
         startManeuver = new cMessage();
-        scheduleAt(simTime() + SimTime(3), startManeuver);
+        scheduleAt(simTime() + SimTime(meneuverTime), startManeuver);
     }
     else if (!positionHelper->isLeader()) {
-        if (positionHelper->getId() < 4)
+        if (positionHelper->getId() < numberOfCars)
         {
             // these are the followers which are already in the platoon
             plexeTraciVehicle->setCruiseControlDesiredSpeed(130.0 / 3.6);
@@ -76,7 +82,7 @@ void LaneChangeManeuverScenario::prepareManeuverCars(int platoonLane)
             app->setPlatoonRole(PlatoonRole::FOLLOWER);
         } else {
             plexeTraciVehicle->setActiveController(otherCar);
-            //plexeTraciVehicle->setCruiseControlDesiredSpeed(50.0 / 3.6);
+            plexeTraciVehicle->setCruiseControlDesiredSpeed(desiredOtherCarSpeed / 3.6);
             plexeTraciVehicle->setFixedLane(1);
         }
     }
