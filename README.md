@@ -1,7 +1,5 @@
-This project is an extension of [plexe](github.com/michele-segata/plexe) (3.0) which implements a protocol to make a platoon change lane quite safely.
+This project is an extension of [plexe](github.com/michele-segata/plexe) (3.0) which implements a protocol to make a platoon change lane safely.
 
 A FSM of the maneuver, and a high level message description, are in the maneuverDoc folder.
 
-There are two main test, settable changing the otherCarController property in the ini file:
-* with "DRIVER", which securely fails the maneuver;
-* with "CACC", which succesfully end the maneuver. 
+Several tests can be made changing settings on the ini file; the most interesting is the "safety distance" from other vehicles in the lane destination. 10m can be a good starting point.
